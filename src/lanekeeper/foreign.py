@@ -13,7 +13,7 @@ import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from lanekeeper import _git
+from lanekeeper import gitutil
 from lanekeeper.ledger import norm
 
 LANES_MAX_AGE_S = 10 * 60
@@ -62,7 +62,7 @@ def foreign_edits(repo: str, checkout: str, rel: str) -> list[str]:
 
 
 def _fresh_lanes(repo: str) -> list[dict]:
-    common = _git.common_dir(repo)
+    common = gitutil.common_dir(repo)
     if common is None:
         return []
     path = common / "overlap-lanes.json"

@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Iterator
 
 from lanekeeper import __version__
-from lanekeeper import _git
+from lanekeeper import gitutil
 
 EVENT_RETENTION_DAYS = 30
 SHORT_RETENTION_DAYS = 7  # notices, errors, warned keys
@@ -204,7 +204,7 @@ def branch_of(checkout: str) -> str | None:
 
 def main_root(directory: str | os.PathLike[str]) -> str | None:
     """Root of the main working tree shared by this checkout (None outside a repo)."""
-    common = _git.common_dir(directory)
+    common = gitutil.common_dir(directory)
     return norm(common.parent) if common is not None else None
 
 

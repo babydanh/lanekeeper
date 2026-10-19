@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Configure git identity for test repositories
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "lanekeeper CI"
+          git config --global init.defaultBranch main
+      - name: Install
+        run: python -m pip install -e .
+      - name: CLI smoke
+        run: |
+          lanekeeper --version
+          lk --help
+      - name: Unit and integration tests
+        run: python -m unittest discover -s tests -v

@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from lanekeeper import __version__, _git, ledger
+from lanekeeper import __version__, gitutil, ledger
 from lanekeeper.hooks import claude, codex, cursor, gemini
 
 HOOK_MODULES = {"claude": claude, "codex": codex, "gemini": gemini, "cursor": cursor}
@@ -37,7 +37,7 @@ def config_for(agent: str, project: bool) -> tuple[Path, str]:
     rel = CONFIG_REL[agent]
     if not project:
         return Path.home() / rel, "user"
-    root = _git.out(Path.cwd(), "rev-parse", "--show-toplevel")
+    root = gitutil.out(Path.cwd(), "rev-parse", "--show-toplevel")
     return (Path(root) if root else Path.cwd()) / rel, "project"
 
 

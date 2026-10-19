@@ -18,7 +18,7 @@ import sys
 import time
 from typing import Sequence
 
-from lanekeeper import __version__, _git, foreign, install, ledger
+from lanekeeper import __version__, foreign, gitutil, install, ledger
 from lanekeeper.hooks import core
 
 STASH_WINDOW_DAYS = 30
@@ -52,7 +52,7 @@ def _known_repos(con: sqlite3.Connection, days: int) -> list[str]:
 
 
 def _stashes(repo: str) -> list[tuple[str, float, str]]:
-    raw = _git.out(repo, "stash", "list", "--format=%gd%x09%ct%x09%gs")
+    raw = gitutil.out(repo, "stash", "list", "--format=%gd%x09%ct%x09%gs")
     entries: list[tuple[str, float, str]] = []
     for line in (raw or "").splitlines():
         parts = line.split("\t", 2)
@@ -272,7 +272,7 @@ def cmd_doctor(con: sqlite3.Connection) -> int:
     ).fetchall()
     for row in live_repos:
         repo = row[0]
-        common = _git.common_dir(repo)
+        common = gitutil.common_dir(repo)
         if common is None or not (common / "worktrees").exists():
             continue
         lanes = common / "overlap-lanes.json"

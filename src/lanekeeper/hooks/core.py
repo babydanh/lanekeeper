@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field, replace
 from typing import Callable
 
-from lanekeeper import _git, guard, ledger
+from lanekeeper import config, gitutil, guard, ledger
 from lanekeeper.foreign import foreign_edits
 
 KINDS = ("shell", "edit", "post_edit", "prompt", "session_start", "stop", "session_end")
@@ -255,7 +255,7 @@ def _scan_quiet(checkout: str) -> None:
 # ---------------------------------------------------------------- git state
 
 def _count(checkout: str, *args: str) -> int:
-    text = _git.out(checkout, *args)
+    text = gitutil.out(checkout, *args)
     try:
         return int(text) if text else 0
     except ValueError:
@@ -263,7 +263,7 @@ def _count(checkout: str, *args: str) -> int:
 
 
 def _owned_dirty(checkout: str, owned: set[str]) -> int:
-    raw = _git.out(checkout, "status", "--porcelain", "-z", "--untracked-files=all", strip=False)
+    raw = gitutil.out(checkout, "status", "--porcelain", "-z", "--untracked-files=all", strip=False)
     if raw is None:
         return 0
     entries = raw.split("\0")
@@ -281,24 +281,33 @@ def _owned_dirty(checkout: str, owned: set[str]) -> int:
     return count
 
 
+def _target_of(checkout: str) -> str:
+    """Branch work lands on, from `.lanekeeper.toml` (default main); a broken config means main."""
+    try:
+        return config.load(gitutil.out(checkout, "rev-parse", "--show-toplevel") or checkout).target
+    except config.ConfigError:
+        return "main"
+
+
 def checkout_state(checkout: str, owned: set[str] | None = None) -> PendingState | None:
     """Git state of one checkout. With `owned`, only files this session edited are counted."""
     if not os.path.isdir(checkout):
         return None
-    branch = _git.out(checkout, "branch", "--show-current")
+    branch = gitutil.out(checkout, "branch", "--show-current")
     if branch is None:
         return None
     if owned is None:
-        status = _git.out(checkout, "status", "--porcelain", strip=False) or ""
+        status = gitutil.out(checkout, "status", "--porcelain", strip=False) or ""
         dirty = len([line for line in status.splitlines() if line])
     else:
         dirty = _owned_dirty(checkout, owned)
-    has_remote = bool((_git.out(checkout, "remote") or "").strip())
+    has_remote = bool((gitutil.out(checkout, "remote") or "").strip())
     unpushed = _count(checkout, "rev-list", "--count", "HEAD", "--not", "--remotes=origin") if has_remote else 0
-    has_main = has_remote and _git.out(checkout, "rev-parse", "-q", "--verify", "origin/main") is not None
+    target = _target_of(checkout)
+    has_target = has_remote and gitutil.out(checkout, "rev-parse", "-q", "--verify", f"origin/{target}") is not None
     not_in_main = (
-        _count(checkout, "rev-list", "--count", "origin/main..HEAD")
-        if has_main and branch != "main"
+        _count(checkout, "rev-list", "--count", f"origin/{target}..HEAD")
+        if has_target and branch != target
         else 0
     )
     return PendingState(
@@ -577,7 +586,7 @@ def _greeting(con: sqlite3.Connection, ev: Event) -> list[str]:
         "SELECT checkout, session_id, ts FROM pending WHERE session_id<>? AND ts>=? ORDER BY ts DESC",
         (ev.session_id, ledger.ago(GREETING_DAYS * 1440)),
     ).fetchall()
-    top = _git.out(ev.cwd, "rev-parse", "--show-toplevel")
+    top = gitutil.out(ev.cwd, "rev-parse", "--show-toplevel")
     lines: list[str] = []
     for row in rows:
         if len(lines) >= GREETING_LIMIT:
