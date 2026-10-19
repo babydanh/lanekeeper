@@ -8,7 +8,8 @@ the git object store, which `git gc` collects.
 How it works: each lane with changes is snapshotted as a temporary commit (HEAD plus its
 uncommitted edits, new files included) through a temporary index (GIT_INDEX_FILE). Then
 `git merge-tree --write-tree` runs on every pair of lanes that edit a common file, and on each
-lane against the base branch. That is the same merge git performs later, so the answer is exact.
+lane against the base branch, with the repository's merge drivers. It predicts the merge from the
+two final trees; `lanekeeper merge` replays commit by commit, so its rebase and checks decide.
 
   [CONFLICT]     git will report a conflict: file, line, enclosing block, both sides.
   [AUTO-MERGE]   same file, different hunks: git (or a merge driver from .gitattributes) merges it.

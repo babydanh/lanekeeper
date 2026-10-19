@@ -70,7 +70,7 @@ The gate gets `LANEKEEPER_BRANCH`, `LANEKEEPER_BASE`, `LANEKEEPER_HEAD` and `LAN
 
 | Piece | What it does |
 |---|---|
-| `lk overlap` | Snapshots every lane **including uncommitted and untracked files** into temporary commits (through a temporary index — your index and working tree are never touched), then runs `git merge-tree` for each pair of lanes and each lane against the target. The verdict is git's own merge, with your merge drivers (e.g. [Mergiraf](https://mergiraf.org)). |
+| `lk overlap` | Snapshots every lane **including uncommitted and untracked files** into temporary commits (through a temporary index — your index and working tree are never touched), then runs `git merge-tree` for each pair of lanes and each lane against the target, with your merge drivers (e.g. [Mergiraf](https://mergiraf.org)). It is a prediction from the two final trees; `lk merge` replays commit by commit, and that rebase plus your checks is the final word. |
 | Pre-edit warning | After each scan the lane → files map is cached in `.git/overlap-lanes.json`. When an agent is about to edit a file, the hook diffs the other lanes for that file (one `git diff -U0` per lane, in parallel, 5 s timeout) and tells the agent which lines are taken. |
 | `lk merge` | Rebase (with rerere) and run `check` **outside** the lock, so other lanes are not blocked by your tests. Inside the lock it only re-runs checks if the target moved meanwhile. Conflicts produce a brief (both sides, line numbers, what each session was doing) and abort cleanly. Squashed commit titles prefer `feat`/`fix` subjects and skip reverted or `fixup!` commits. |
 | `lk merge --train` | Assembles several lanes on the target in a temporary worktree, tests once, pushes once. A failing combination is bisected per lane; the culprits are dropped and the rest lands. |
@@ -81,14 +81,17 @@ The gate gets `LANEKEEPER_BRANCH`, `LANEKEEPER_BASE`, `LANEKEEPER_HEAD` and `LAN
 
 | | Claude Code | Codex CLI | Gemini CLI | Cursor | omp |
 |---|---|---|---|---|---|
-| Block destructive git | ✅ `PreToolUse` | ✅ `PreToolUse` | ✅ `BeforeTool` | ✅ `beforeShellExecution` | ✅ |
-| Warn before editing a taken region | ✅ | ✅ (`apply_patch`, `Edit`, `Write`) | ✅ | ✅ `preToolUse` (`Write`) | ✅ |
-| Activity ledger + overlap scan after edits | ✅ | ✅ | ✅ | ✅ `afterFileEdit` | ✅ |
-| User unlock phrase | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Block destructive git | `PreToolUse` | `PreToolUse` | `BeforeTool` | `beforeShellExecution` | ✅ |
+| Warn before editing a taken region | `PreToolUse` (`Edit`, `Write`) | `PreToolUse` (`apply_patch`, `Edit`, `Write`) | `BeforeTool` | `preToolUse` (`Write`) | ✅ |
+| Activity ledger + overlap scan after edits | `PostToolUse` | `PostToolUse` | `AfterTool` | `afterFileEdit` | ✅ |
+| Status | experimental | experimental | experimental | experimental | used daily |
 
-Hook payloads follow each vendor's published hook reference (October 2026) and are covered by tests with those payloads. Only the omp adapter has been exercised against the real agent so far — reports for the others are very welcome.
+**Experimental** means: the adapter follows the vendor's published hook reference (October 2026) and is tested with payloads from that reference, but has not yet been run inside the real agent. Reports and fixes are very welcome.
 
-To let an agent run a blocked command in one session, type exactly `allow git discard` as your prompt.
+Limits worth knowing:
+- Hooks **fail open**: if a hook crashes or gets a payload it does not understand, it logs the error (`lk doctor` shows it) and lets the agent continue, so a broken hook never blocks your work. The guard is a seatbelt, not a sandbox.
+- The guard matches shell command text. It catches `git stash`, `git -C dir reset --hard`, chained commands and so on, but not aliases (`g stash`), scripts that call git internally, or other indirection.
+- To let an agent run a blocked command in one session, type exactly `allow git discard` as your prompt.
 
 ## Compared to
 
