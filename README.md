@@ -1,5 +1,10 @@
 # lanekeeper
 
+[![CI](https://github.com/babydanh/lanekeeper/actions/workflows/ci.yml/badge.svg)](https://github.com/babydanh/lanekeeper/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 **Run several AI coding agents on one repo at the same time without them clobbering each other's work.**
 
 Claude Code, Codex CLI, Gemini CLI, Cursor and omp each get their own git worktree ("lane"). lanekeeper watches the lanes and:
