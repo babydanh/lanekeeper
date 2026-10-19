@@ -54,16 +54,24 @@ def script_command(directory: str, name: str, source: str) -> str:
 
 def cli_env(home: str, base: dict[str, str] | None = None) -> dict[str, str]:
     env = dict(os.environ if base is None else base)
-    env["PYTHONPATH"] = SRC_DIR + os.pathsep + env.get("PYTHONPATH", "")
     env["LANEKEEPER_HOME"] = home
     env["LANEKEEPER_DB"] = os.path.join(home, "activity.db")
     return env
 
 
+CLI_BOOTSTRAP = "import sys; sys.path.insert(0, {src!r}); from lanekeeper.cli import main; raise SystemExit(main())"
+
+
 def run_cli(args: list[str], home: str, *, cwd: str | None = None, base_env: dict[str, str] | None = None):
-    """Run `python -m lanekeeper <args>` as a real process and return the CompletedProcess."""
+    """Run the CLI as a real process and return the CompletedProcess.
+
+    The package directory is put on sys.path explicitly. The Python used here ships a
+    python312._pth file, which ignores PYTHONPATH and does not add the working directory,
+    so `python -m lanekeeper` cannot import the package from a subprocess otherwise.
+    """
+    code = CLI_BOOTSTRAP.format(src=SRC_DIR)
     return subprocess.run(
-        [sys.executable, "-m", "lanekeeper", *args],
+        [sys.executable, "-c", code, *args],
         capture_output=True,
         text=True,
         encoding="utf-8",
