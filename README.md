@@ -26,7 +26,7 @@ lk merge ../feat-a --push   →  rebase · check · gate · 1 squashed commit ·
 ## Install
 
 ```bash
-uv tool install lanekeeper        # or: pipx install lanekeeper / pip install lanekeeper
+uv tool install git+https://github.com/babydanh/lanekeeper   # or: pipx install git+https://github.com/babydanh/lanekeeper
 lanekeeper install claude         # writes hooks into ~/.claude/settings.json (merged, backed up)
 lanekeeper install codex          # ~/.codex/hooks.json
 lanekeeper install gemini         # ~/.gemini/settings.json

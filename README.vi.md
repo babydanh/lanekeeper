@@ -13,7 +13,7 @@ Không phụ thuộc thư viện ngoài (thư viện chuẩn Python ≥ 3.11 + g
 ## Cài đặt
 
 ```bash
-uv tool install lanekeeper        # hoặc: pipx install lanekeeper / pip install lanekeeper
+uv tool install git+https://github.com/babydanh/lanekeeper   # hoặc: pipx install git+https://github.com/babydanh/lanekeeper
 lanekeeper install claude         # ghi hook vào ~/.claude/settings.json (gộp với hook sẵn có, có bản sao lưu)
 lanekeeper install codex          # ~/.codex/hooks.json
 lanekeeper install gemini         # ~/.gemini/settings.json
