@@ -99,7 +99,7 @@ Limits worth knowing:
 |---|---|---|
 | [clash](https://github.com/clash-sh/clash) | Worktree conflict detection | lanekeeper also sees uncommitted work, warns before the edit with line ranges, and lands lanes |
 | [mergetrain](https://github.com/yongjip/mergetrain) | Local merge queue | lanekeeper adds config-driven check/gate, squash per lane, train bisection, agent hooks |
-| [bors-ng](https://github.com/bors-ng/bors-ng) / [kodiak](https://github.com/chdsbd/kodiak) | PR merge bots | Need pull requests and a hosted bot; lanekeeper works on any git remote, offline |
+| [bors-ng](https://github.com/bors-ng/bors-ng) / [kodiak](https://github.com/chdsbd/kodiak) | PR merge bots | Need pull requests and a hosted bot; lanekeeper runs on your machine against any git remote named `origin` (GitHub, GitLab, self-hosted) |
 | [mcp_agent_mail](https://github.com/Dicklesworthstone/mcp_agent_mail) | Messaging + file leases for agents | lanekeeper records activity through hooks (agents do not have to call a tool) and uses git to detect real overlaps instead of leases |
 | [vibe-kanban](https://github.com/BloopAI/vibe-kanban), [claude-squad](https://github.com/smtg-ai/claude-squad) | Launch and manage many agents | Complementary: they start agents in worktrees; lanekeeper keeps those worktrees from colliding and lands them |
 
