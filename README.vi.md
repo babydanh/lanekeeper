@@ -5,7 +5,7 @@
 Claude Code, Codex CLI, Gemini CLI, Cursor và omp mỗi agent làm trong một git worktree riêng ("làn"). lanekeeper theo dõi các làn và:
 
 1. **Cảnh báo agent *trước khi* sửa đoạn code mà agent khác đang sửa**, kể cả phần chưa commit, kèm số dòng và tên hàm bao quanh.
-2. **Gộp làn đã xong qua hàng đợi ở máy**: khoá, rebase, chạy kiểm tra, gộp thành 1 commit, push. Không cần Pull Request hay dịch vụ ngoài.
+2. **Gộp làn đã xong qua hàng đợi ở máy**: khoá, rebase, chạy kiểm tra, gộp thành 1 commit, push. Không cần Pull Request hay bot gộp chạy trên dịch vụ ngoài; cần remote tên `origin` (GitHub, GitLab, máy chủ git riêng).
 3. **Chặn lệnh git làm mất code** (`git stash`, `reset --hard`, `checkout .`, `clean -f`, …) trừ khi *bạn* cho phép.
 
 Không phụ thuộc thư viện ngoài (thư viện chuẩn Python ≥ 3.11 + git). Chạy trên Windows, macOS, Linux. [English](README.md)
@@ -53,9 +53,13 @@ squash = true                   # mỗi làn thành 1 commit trên nhánh đích
 
 Lệnh `gate` nhận biến `LANEKEEPER_BRANCH`, `LANEKEEPER_BASE`, `LANEKEEPER_HEAD`, `LANEKEEPER_CHANGED` (file đổi, mỗi dòng một file) để chỉ chạy test bị ảnh hưởng hoặc gọi CI rồi chờ. Gõ sai tên khoá là báo lỗi, không âm thầm tắt kiểm tra.
 
-## Cho phép một lệnh bị chặn
+## Trạng thái hỗ trợ và giới hạn
 
-Trong session đó, gõ đúng câu `cho phép git xoá` (hoặc `allow git discard`) làm prompt.
+- **omp**: dùng hằng ngày. **Claude Code, Codex CLI, Gemini CLI, Cursor: experimental**, tức là làm theo tài liệu hook chính thức (10/2026) và có test bằng payload mẫu trong tài liệu, nhưng chưa chạy trong agent thật. Rất mong được báo lỗi.
+- Hook **lỗi thì cho qua**: hook hỏng hoặc gặp dữ liệu lạ thì ghi lỗi (`lk doctor` hiện ra) rồi để agent làm tiếp, không bao giờ chặn việc của bạn vì lỗi của chính nó. Bộ chặn là dây an toàn, không phải hộp cát.
+- Bộ chặn nhận diện theo chữ của lệnh shell: bắt được `git stash`, `git -C thư-mục reset --hard`, lệnh nối nhau…, nhưng không bắt alias (`g stash`), script tự gọi git bên trong, hay cách gọi gián tiếp khác.
+- `lk overlap` là dự đoán từ hai cây code cuối; `lk merge` rebase từng commit, kết quả rebase và kiểm tra của nó mới là kết luận cuối.
+- Cho phép một lệnh bị chặn trong một session: gõ đúng câu `cho phép git xoá` (hoặc `allow git discard`) làm prompt.
 
 Chi tiết cách hoạt động, bảng hỗ trợ từng agent và so sánh với các dự án khác: xem [README tiếng Anh](README.md).
 
